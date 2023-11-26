@@ -1,0 +1,1 @@
+##검증파일 실행방법##1. conda 환경 구축$ conda env create -f environment.yml2. conda 환경 실행$ conda activate xgboost3-1. 전류 검증 실행$ cd current$ python current_valid.py --path {current검증데이터 디렉토리 경로명-default=‘current’}3-2. 진동 검증 실행$ cd vibration$ python current_valid.py --path {current 검증데이터 디렉토리 경로명-default=‘vibration’}
