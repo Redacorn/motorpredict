@@ -4,7 +4,6 @@ warnings.filterwarnings('ignore')
 import os
 import glob
 import argparse
-import csv
 
 import numpy as np
 import pandas as pd
@@ -26,7 +25,7 @@ column names of dataframe will be like this:
 '''
 
 datapath = r"D:\기계시설물 고장 예지 센서\Training\current\2.2kW\L-DSF-01\1"
-savepath = os.path.dirname(os.path.abspath(__file__)) + '/transformed'
+savepath = '/home/gpuadmin/test_data/transformed'
 
 
 # get arguments
