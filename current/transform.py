@@ -53,6 +53,7 @@ def transform_files(datapath, savepath):
             motor = glob.glob(motor + '/*')
             for category in motor:
                 category = glob.glob(category + '/*')                
+                print(category)
                 csv_name = os.path.basename(watt) + '_' + os.path.basename(motor) + '_' + os.path.basename(category) + '.csv'               
                 data_transform(category, savepath, csv_name)
 
@@ -136,6 +137,7 @@ def data_transform(category, savepath, csv_name):
                     'R_3x', 'S_3x', 'T_3x', 'R_4x', 'S_4x', 'T_4x']
 
             data['WATT'] = meta[3]
+            data['']
             y = pd.read_csv(filename, header=None, skiprows=3, nrows=1, encoding='cp1252')
             y = y[1]
 
