@@ -48,15 +48,14 @@ def make_dir(path):
 def transform_files(datapath, savepath):
     datapath = glob.glob(datapath + '/*')
     for watt in datapath:
-        print(watt)
-        print(os.path.basename(watt))
         watt = glob.glob(watt + '/*')
         for motor in watt:
+            print(motor)
+            print(os.path.basename(motor))
             motor = glob.glob(motor + '/*')
             for category in motor:
-                for category_path in category:
-                    csv_name = os.path.basename(watt) + '_' + os.path.basename(motor) + '_' + os.path.basename(category_path) + '.csv'
-                    data_transform(category_path, savepath, csv_name)
+                csv_name = os.path.basename(watt) + '_' + os.path.basename(motor) + '_' + os.path.basename(category_path) + '.csv'
+                data_transform(category, savepath, csv_name)
                 
 '''
 data structure will be like this:
