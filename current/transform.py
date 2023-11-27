@@ -50,7 +50,6 @@ def transform_files(datapath, savepath):
     for watt in datapath:
         for motor in watt:
             for category in motor:
-                print(type(watt), type(motor), type(category))
                 csv_name = os.path.basename(watt) + '_' + os.path.basename(motor) + '_' + os.path.basename(category) + '.csv'
                 data_transform(category, savepath, csv_name)
                 
@@ -90,15 +89,14 @@ so, we're going to make a dataframe with all the data of category.
 '''
 def data_transform(category, savepath, csv_name):
 
-    result_df = pd.DataFrame()
-    result_df.columns = ['WATT', 'R_AbsMax', 'S_AbsMax', 'T_AbsMax', 'R_AbsMean', 'S_AbsMean','T_AbsMean',
-                'R_P2P', 'S_P2P', 'T_P2P', 'R_RMS', 'S_RMS', 'T_RMS', 
-                'R_Skewness', 'S_Skewness', 'T_Skewness', 'R_Kurtosis', 'S_Kurtosis', 'T_Kurtosis',
-                'R_Crest', 'S_Crest', 'T_Crest', 'R_Shape', 'S_Shape', 'T_Shape',
-                'R_Impulse', 'S_Impulse', 'T_Impulse',
-                'RS_phase', 'ST_phase', 'TR_phase', 'RS_Level', 'ST_Level', 'TR_Level',
-                'R_1x', 'S_1x', 'T_1x', 'R_2x', 'S_2x', 'T_2x',
-                'R_3x', 'S_3x', 'T_3x', 'R_4x', 'S_4x', 'T_4x']
+    result_df = pd.DataFrame(columns=['WATT', 'R_AbsMax', 'S_AbsMax', 'T_AbsMax', 'R_AbsMean', 'S_AbsMean','T_AbsMean',
+                                    'R_P2P', 'S_P2P', 'T_P2P', 'R_RMS', 'S_RMS', 'T_RMS', 
+                                    'R_Skewness', 'S_Skewness', 'T_Skewness', 'R_Kurtosis', 'S_Kurtosis', 'T_Kurtosis',
+                                    'R_Crest', 'S_Crest', 'T_Crest', 'R_Shape', 'S_Shape', 'T_Shape',
+                                    'R_Impulse', 'S_Impulse', 'T_Impulse',
+                                    'RS_phase', 'ST_phase', 'TR_phase', 'RS_Level', 'ST_Level', 'TR_Level',
+                                    'R_1x', 'S_1x', 'T_1x', 'R_2x', 'S_2x', 'T_2x',
+                                    'R_3x', 'S_3x', 'T_3x', 'R_4x', 'S_4x', 'T_4x'])
 
     for filename in category:
         try:
