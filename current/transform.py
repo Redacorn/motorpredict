@@ -50,11 +50,11 @@ def transform_files(datapath, savepath):
     for watt in datapath:
         watt = glob.glob(watt + '/*')
         for motor in watt:
-            print(motor)
-            print(os.path.basename(motor))
             motor = glob.glob(motor)
             for category in motor:
-                csv_name = os.path.basename(watt) + '_' + os.path.basename(motor) + '_' + os.path.basename(category_path) + '.csv'
+                print(type(category))
+                print(type(glob.glob(motor + '/*')))
+                csv_name = os.path.basename(watt) + '_' + os.path.basename(motor) + '_' + os.path.basename(category) + '.csv'
                 data_transform(category, savepath, csv_name)
                 
 '''
