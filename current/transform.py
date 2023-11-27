@@ -48,6 +48,8 @@ def make_dir(path):
 def transform_files(datapath, savepath):
     datapath = glob.glob(datapath + '/*')
     for watt in datapath:
+        print(watt)
+        print(os.path.basename(watt))
         watt = glob.glob(watt + '/*')
         for motor in watt:
             motor = glob.glob(motor + '/*')
