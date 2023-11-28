@@ -164,7 +164,10 @@ def data_transform(category, savepath, csv_name, file_encoding):
             result_df = pd.concat([result_df, df], ignore_index=True)
 
         # print progress with time elapsed, left files, and progress percentage using /r option
-        print('left files: ', len(category) - category.index(filename), 'progress: ', round((category.index(filename) + 1) / len(category) * 100, 2), '%', end='\r')
+        # print is slow, so update it every 100 files
+        if len(result_df) % 100 == 0:
+            print('left files: ', len(category) - category.index(filename), 'progress: ', round((category.index(filename) + 1) / len(category) * 100, 2), '%', end='\r')
+        
         
 
     # save result_df as csv file
