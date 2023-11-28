@@ -46,15 +46,17 @@ def make_dir(path):
 
 # transform all files in datapath
 def transform_files(datapath, savepath):
-    datapath = glob.glob(datapath + '/*')
-    for watt in datapath:
-        for motor in watt:
-            for category in motor:
-                csv_name = os.path.basename(watt) + '_' + os.path.basename(motor) + '_' + os.path.basename(category) + '.csv'
-                data_transform(category, savepath, csv_name)
+    # transform and merge all files in category-level directory
+    for watt in os.listdir(datapath):
+        for motor in os.listdir(datapath + '/' + watt):
+            for category in os.listdir(datapath + '/' + watt + '/' + motor):
+                category_path = datapath + '/' + watt + '/' + motor + '/' + category
+                csv_name = watt + '_' + motor + '_' + category + '.csv'
+                data_transform(glob.glob(category_path + '/*.csv'), savepath, csv_name)
+                print('transformed: ', category_path)
                 
 '''
-data structure will be like this:
+data structure will have 3 levels of directory; watt, motor, category like this:
 
 (data_path)
 ./
