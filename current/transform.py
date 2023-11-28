@@ -5,9 +5,8 @@ import os
 import glob
 import argparse
 import chardet
-import multiprocessing as mp
-global p
-p = mp.Pool(40)
+
+from multiprocessing import Pool
 
 import numpy as np
 import pandas as pd
@@ -50,9 +49,8 @@ def make_dir(path):
 
 # transform all files in datapath
 def transform_files(datapath, savepath):
-    global p
-
     # transform and merge all files in category-level directory
+    tasks = []
     for watt in os.listdir(datapath):
         for motor in os.listdir(datapath + '/' + watt):
             for category in os.listdir(datapath + '/' + watt + '/' + motor):
@@ -60,11 +58,10 @@ def transform_files(datapath, savepath):
                 file_encoding = detect_encoding(datapath + '/' + watt + '/' + motor + '/' + category)
                 category_path = datapath + '/' + watt + '/' + motor + '/' + category
                 csv_name = watt + '_' + motor + '_' + category + '.csv'
-                
-                # parallel processing
-                p.apply_async(data_transform, args=(glob.glob(category_path + '/*.csv'), savepath, csv_name, file_encoding))
-                data_transform(glob.glob(category_path + '/*.csv'), savepath, csv_name, file_encoding)
-                print('transformed: ', category_path)
+                tasks.append((glob.glob(category_path + '/*.csv'), savepath, csv_name, file_encoding))
+
+    with Pool() as p:
+        p.starmap(data_transform, tasks)
                 
 
 
