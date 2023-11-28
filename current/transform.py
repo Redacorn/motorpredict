@@ -143,7 +143,6 @@ def data_transform(category, savepath, csv_name, file_encoding):
                     'R_3x', 'S_3x', 'T_3x', 'R_4x', 'S_4x', 'T_4x']
 
             data['WATT'] = meta[3]
-            data['']
             y = pd.read_csv(filename, header=None, skiprows=3, nrows=1, encoding=file_encoding)
             y = y[1]
 
