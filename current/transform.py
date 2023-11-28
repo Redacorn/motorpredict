@@ -5,7 +5,6 @@ import os
 import glob
 import argparse
 import chardet
-import time
 
 import numpy as np
 import pandas as pd
@@ -28,9 +27,6 @@ column names of dataframe will be like this:
 
 datapath = r"D:\기계시설물 고장 예지 센서\Training\current\2.2kW\L-DSF-01\1"
 savepath = '/home/gpuadmin/test_data/transformed'
-
-global start_time
-start_time = time.time()
 
 
 # get arguments
@@ -168,7 +164,7 @@ def data_transform(category, savepath, csv_name, file_encoding):
             result_df = pd.concat([result_df, df], ignore_index=True)
 
         # print progress with time elapsed, left files, and progress percentage using /r option
-        print('transforming: ', filename, 'time elapsed: ', time.time() - start_time, 'left files: ', len(category) - category.index(filename), 'progress: ', round((category.index(filename) + 1) / len(category) * 100, 2), '%', end='\r')
+        print('left files: ', len(category) - category.index(filename), 'progress: ', round((category.index(filename) + 1) / len(category) * 100, 2), '%', end='\r')
         
 
     # save result_df as csv file
