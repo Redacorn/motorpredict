@@ -160,7 +160,7 @@ def data_transform(category, savepath, csv_name, file_encoding):
                         'R_3x', 'S_3x', 'T_3x', 'R_4x', 'S_4x', 'T_4x']]
 
 
-            result_df = result_df.concat([result_df, df], axis=0)
+            result_df = pd.concat([result_df, df], ignore_index=True)
             
     # save result_df as csv file
     result_df.to_csv(savepath + '/' + csv_name, index=False)        
