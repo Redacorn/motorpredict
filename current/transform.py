@@ -5,6 +5,7 @@ import os
 import glob
 import argparse
 import chardet
+import time
 
 import numpy as np
 import pandas as pd
@@ -27,6 +28,9 @@ column names of dataframe will be like this:
 
 datapath = r"D:\기계시설물 고장 예지 센서\Training\current\2.2kW\L-DSF-01\1"
 savepath = '/home/gpuadmin/test_data/transformed'
+
+global start_time
+start_time = time.time()
 
 
 # get arguments
@@ -101,6 +105,7 @@ so, we're going to make a dataframe with all the data of category.
 '''
 def data_transform(category, savepath, csv_name, file_encoding):
 
+    global start_time
     result_df = pd.DataFrame(columns=['WATT', 'R_AbsMax', 'S_AbsMax', 'T_AbsMax', 'R_AbsMean', 'S_AbsMean','T_AbsMean',
                                     'R_P2P', 'S_P2P', 'T_P2P', 'R_RMS', 'S_RMS', 'T_RMS', 
                                     'R_Skewness', 'S_Skewness', 'T_Skewness', 'R_Kurtosis', 'S_Kurtosis', 'T_Kurtosis',
@@ -161,7 +166,11 @@ def data_transform(category, savepath, csv_name, file_encoding):
 
 
             result_df = pd.concat([result_df, df], ignore_index=True)
-            
+
+        # print progress with time elapsed, left files, and progress percentage using /r option
+        print('transforming: ', filename, 'time elapsed: ', time.time() - start_time, 'left files: ', len(category) - category.index(filename), 'progress: ', round((category.index(filename) + 1) / len(category) * 100, 2), '%', end='\r')
+        
+
     # save result_df as csv file
     result_df.to_csv(savepath + '/' + csv_name, index=False)        
     
