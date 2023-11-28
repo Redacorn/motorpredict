@@ -5,6 +5,9 @@ import os
 import glob
 import argparse
 import chardet
+import multiprocessing as mp
+global p
+p = mp.Pool(40)
 
 import numpy as np
 import pandas as pd
@@ -47,6 +50,8 @@ def make_dir(path):
 
 # transform all files in datapath
 def transform_files(datapath, savepath):
+    global p
+
     # transform and merge all files in category-level directory
     for watt in os.listdir(datapath):
         for motor in os.listdir(datapath + '/' + watt):
@@ -55,8 +60,12 @@ def transform_files(datapath, savepath):
                 file_encoding = detect_encoding(datapath + '/' + watt + '/' + motor + '/' + category)
                 category_path = datapath + '/' + watt + '/' + motor + '/' + category
                 csv_name = watt + '_' + motor + '_' + category + '.csv'
+                
+                # parallel processing
+                p.apply_async(data_transform, args=(glob.glob(category_path + '/*.csv'), savepath, csv_name, file_encoding))
                 data_transform(glob.glob(category_path + '/*.csv'), savepath, csv_name, file_encoding)
                 print('transformed: ', category_path)
+                
 
 
 # detect encoding of first file in category
@@ -101,7 +110,6 @@ so, we're going to make a dataframe with all the data of category.
 '''
 def data_transform(category, savepath, csv_name, file_encoding):
 
-    global start_time
     result_df = pd.DataFrame(columns=['WATT', 'R_AbsMax', 'S_AbsMax', 'T_AbsMax', 'R_AbsMean', 'S_AbsMean','T_AbsMean',
                                     'R_P2P', 'S_P2P', 'T_P2P', 'R_RMS', 'S_RMS', 'T_RMS', 
                                     'R_Skewness', 'S_Skewness', 'T_Skewness', 'R_Kurtosis', 'S_Kurtosis', 'T_Kurtosis',
