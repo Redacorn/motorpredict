@@ -62,6 +62,7 @@ def transform_files(datapath, savepath):
 
     with Pool() as p:
         p.starmap(data_transform, tasks)
+        
                 
 
 
@@ -172,8 +173,9 @@ def data_transform(category, savepath, csv_name, file_encoding):
         # print is slow, so update it every 100 files
         if len(result_df) % 100 == 0:
             print('left files: ', len(category) - category.index(filename), 'progress: ', round((category.index(filename) + 1) / len(category) * 100, 2), '%', end='\r')
-        
-        
+    
+    # print filename of category when finished
+    print('category: ', csv_name, 'finished. ' + str(len(result_df)) + ' files transformed.')        
 
     # save result_df as csv file
     result_df.to_csv(savepath + '/' + csv_name, index=False)        
