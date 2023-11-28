@@ -4,6 +4,7 @@ warnings.filterwarnings('ignore')
 import os
 import glob
 import argparse
+import chardet
 
 import numpy as np
 import pandas as pd
@@ -50,10 +51,19 @@ def transform_files(datapath, savepath):
     for watt in os.listdir(datapath):
         for motor in os.listdir(datapath + '/' + watt):
             for category in os.listdir(datapath + '/' + watt + '/' + motor):
+                # for first file, detect encoding
+                file_encoding = detect_encoding(datapath + '/' + watt + '/' + motor + '/' + category)
                 category_path = datapath + '/' + watt + '/' + motor + '/' + category
                 csv_name = watt + '_' + motor + '_' + category + '.csv'
-                data_transform(glob.glob(category_path + '/*.csv'), savepath, csv_name)
+                data_transform(glob.glob(category_path + '/*.csv'), savepath, csv_name, file_encoding)
                 print('transformed: ', category_path)
+
+
+# detect encoding of first file in category
+def detect_encoding(category_path):
+    with open(glob.glob(category_path + '/*.csv')[0], 'rb') as f:
+        result = chardet.detect(f.read())
+        return result['encoding']
                 
 '''
 data structure will have 3 levels of directory; watt, motor, category like this:
@@ -89,7 +99,7 @@ in the last directory, there are csv files.
 after transformation, each csv file will be a single row of dataframe.
 so, we're going to make a dataframe with all the data of category.
 '''
-def data_transform(category, savepath, csv_name):
+def data_transform(category, savepath, csv_name, file_encoding):
 
     result_df = pd.DataFrame(columns=['WATT', 'R_AbsMax', 'S_AbsMax', 'T_AbsMax', 'R_AbsMean', 'S_AbsMean','T_AbsMean',
                                     'R_P2P', 'S_P2P', 'T_P2P', 'R_RMS', 'S_RMS', 'T_RMS', 
@@ -102,13 +112,13 @@ def data_transform(category, savepath, csv_name):
 
     for filename in category:
         try:
-            cur = pd.read_csv(filename, header=None, skiprows=9, encoding='cp1252')
+            cur = pd.read_csv(filename, header=None, skiprows=9, encoding=file_encoding)
             cur = np.asarray(cur)[:,1:4].transpose()
 
-            meta = pd.read_csv(filename, header=None, skiprows=4, nrows=1, encoding='cp1252')
+            meta = pd.read_csv(filename, header=None, skiprows=4, nrows=1, encoding=file_encoding)
             rpm = int(meta[2])
 
-            fs = pd.read_csv(filename, header=None, skiprows=6, nrows=1, encoding='cp1252')
+            fs = pd.read_csv(filename, header=None, skiprows=6, nrows=1, encoding=file_encoding)
             Fs = int(fs[1])
 
             TimeFeatureExtractor = Extract_Time_Features(cur)
@@ -134,7 +144,7 @@ def data_transform(category, savepath, csv_name):
 
             data['WATT'] = meta[3]
             data['']
-            y = pd.read_csv(filename, header=None, skiprows=3, nrows=1, encoding='cp1252')
+            y = pd.read_csv(filename, header=None, skiprows=3, nrows=1, encoding=file_encoding)
             y = y[1]
 
         except (NameError, IndexError, TypeError, pd.errors.EmptyDataError):
