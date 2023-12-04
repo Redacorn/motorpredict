@@ -98,10 +98,10 @@ def merge_and_label_dfs(df_list, target_state):
             df['state'] = 0
 
         # 처리된 데이터프레임을 리스트에 추가
-        processed_dfs._append(df)
+        processed_dfs.append(df)
 
     # 모든 데이터프레임을 하나로 합침
-    merged_df = pd.concat(processed_dfs, ignore_index=True)
+    merged_df = pd.concat(processed_dfs)
 
     return merged_df
 
