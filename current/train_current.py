@@ -69,19 +69,19 @@ def df_preprocess(datapath):
         # add new column 'state'
         if state(file) == 0:
             data['state'] = 0
-            df_0 = df_0._append(data)
+            df_0 = pd.concat([df_0, data])
         elif state(file) == 1:
             data['state'] = 1
-            df_1 = df_1._append(data)
+            df_1 = pd.concat([df_1, data])
         elif state(file) == 2:
             data['state'] = 2
-            df_2 = df_2._append(data)
+            df_2 = pd.concat([df_2, data])
         elif state(file) == 3:
             data['state'] = 3
-            df_3 = df_3._append(data)
+            df_3 = pd.concat([df_3, data])
         elif state(file) == 4:
             data['state'] = 4
-            df_4 = df_4._append(data)
+            df_4 = pd.concat([df_4, data])
     return df_0, df_1, df_2, df_3, df_4
 
 
@@ -98,7 +98,7 @@ def merge_and_label_dfs(df_list, target_state):
             df['state'] = 0
 
         # 처리된 데이터프레임을 리스트에 추가
-        processed_dfs._append(df)
+        processed_dfs = pd.concat([processed_dfs, df], ignore_index=True)
 
     # 모든 데이터프레임을 하나로 합침
     merged_df = pd.concat(processed_dfs, ignore_index=True)
