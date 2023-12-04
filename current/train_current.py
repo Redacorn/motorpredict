@@ -1,20 +1,37 @@
-
+# global
 import os
+import re
 import glob
 import argparse
 
+# data processing
 import numpy as np
 import pandas as pd
 
+# train data
 from sklearn.model_selection import train_test_split
 
+# models
 import xgboost as xgb
 import lightgbm as lgb
-import shap
+from sklearn.linear_model import LogisticRegression
 
-from sklearn.metrics import accuracy_score, classification_report
-from Current_Feature_Extractor import Extract_Time_Features, Extract_Phase_Features, Extract_Freq_Features
-import re
+# evaluation
+from sklearn.metrics import accuracy_score, f1_score
+
+
+def arg_parse():
+    # params : data_path, save_path
+    parser = argparse.ArgumentParser(description='usage: python train_current.py --data_path <data_path> --save_path <save_path>')
+    parser.add_argument('--data_path', type=str, default='/home/gpuadmin/test_data/transformed/current', help='data path')
+    parser.add_argument('--save_path', type=str, default='../model', help='model save path')
+
+    # if no ../model folder, make folder
+    if not os.path.exists('../model'):
+        os.makedirs('../model')
+    
+    args = parser.parse_args()
+    return args
 
 
 def state(filename):
@@ -38,12 +55,14 @@ def state(filename):
 
     return state
 
+
 def df_preprocess(datapath):
     df_0 = pd.DataFrame()
     df_1 = pd.DataFrame()
     df_2 = pd.DataFrame()
     df_3 = pd.DataFrame()
     df_4 = pd.DataFrame()
+
     for file in datapath:
         print(file, state(file))
         data = pd.read_csv(file)
@@ -86,66 +105,72 @@ def merge_and_label_dfs(df_list, target_state):
 
     return merged_df
 
-# split data into train and test
 
-def train(df):
-    # split data into X and y
-    X = df.iloc[:, :-1]
-    y = df.iloc[:, -1]
-
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1)
-
-    # train model with GPU
-    model = xgb.XGBClassifier(
-        tree_method='gpu_hist',  # Use GPU accelerated algorithm
-        # 다음 매개변수는 필요에 따라 조정할 수 있음
-        gpu_id=0,               # GPU ID, 멀티 GPU 시스템에서 선택적 사용
-
-        predictor='gpu_predictor' # 예측에 GPU를 사용
-    )
-    model.fit(X_train, y_train)
-
+def pred_and_eval(model, X_test, y_test):
     # predict
     y_pred = model.predict(X_test)
 
     # evaluate
-    from sklearn.metrics import accuracy_score
-    from sklearn.metrics import f1_score
     accuracy = accuracy_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
     print(f"accuracy: {accuracy}")
     print(f"f1 score: {f1}")
 
-    return model
+    return accuracy, f1
 
-def explain_with_shap(model, X_train, X_test):
-    # SHAP 값을 계산
-    explainer = shap.Explainer(model)
-    shap_values = explainer(X_test)
-    plt.subplots_adjust(left=0.4)
-    # SHAP 요약 플롯 출력
-    shap.summary_plot(shap_values, X_test)
 
-    return shap_values
+def train(df, save_path):
+    # train 3 models; xgboost, lightgbm, logistic regression
+    # split data into X and y
+    X = df.iloc[:, :-1]
+    y = df.iloc[:, -1]
 
-from sklearn.tree import DecisionTreeClassifier, plot_tree
-import matplotlib.pyplot as plt
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1)
 
-def train_surrogate_model(original_model, X_train, y_train):
-    # 서로게이트 모델로 결정 트리 사용
-    surrogate = DecisionTreeClassifier(max_depth=3)  # 깊이는 필요에 따라 조정
-    surrogate.fit(X_train, original_model.predict(X_train))
-    return surrogate
+    # train model with GPU
+    xgb_model = xgb.XGBClassifier(
+        tree_method='gpu_hist',  # Use GPU accelerated algorithm
+        # 다음 매개변수는 필요에 따라 조정할 수 있음
+        gpu_id=0,               # GPU ID, 멀티 GPU 시스템에서 선택적 사용
+        n_gpus=-1,              # 모든 GPU를 사용
+        predictor='gpu_predictor' # 예측에 GPU를 사용
+    )
+    xgb_model.fit(X_train, y_train)
+    # save xgb model
+    xgb_model.save_model(os.path.join(save_path, 'xgb_model.json'))
+    
+    lgb_model = lgb.LGBMClassifier(
+        device='gpu',           # Use GPU acceleration
+        gpu_platform_id=0,      # platform id
+        gpu_device_id=0         # device id
+    )
+    lgb_model.fit(X_train, y_train)
+    # save lgb model
+    lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model.json'))
 
-def plot_surrogate_model(surrogate, feature_names):
-    # 서로게이트 모델 시각화
-    plt.figure(figsize=(20,10))
-    plot_tree(surrogate, feature_names=feature_names, filled=True, rounded=True)
-    plt.show()
+    logit_model = LogisticRegression()
+    logit_model.fit(X_train, y_train)
+    # save logit model
+    logit_model.save_model(os.path.join(save_path, 'logit_model.json'))
+
+    # predict and evaluate
+    xgb_result = pred_and_eval(xgb_model, X_test, y_test)
+    lgb_result = pred_and_eval(lgb_model, X_test, y_test)
+    logit_result = pred_and_eval(logit_model, X_test, y_test)
+
+    # save result
+    result_df = pd.DataFrame([xgb_result, lgb_result, logit_result], columns=['accuracy', 'f1 score'], index=['xgb', 'lgb', 'logit'])
+    result_df.to_csv(os.path.join(save_path, 'result.csv'))
+
+    return xgb_model, lgb_model, logit_model
+
 
 def main():
-    path = '../transformed/current'
+
+    # parse arg
+    data_path, save_path = arg_parse()
+    
+    path = data_path
     abs_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
     folder_path = abs_path
 
@@ -155,27 +180,13 @@ def main():
 
     # train model
     train_df = merge_and_label_dfs(df_list, 1)
-    model_1 = train(train_df)
+    model_1 = train(train_df, save_path)
     train_df = merge_and_label_dfs(df_list, 2)
-    model_2 = train(train_df)
+    model_2 = train(train_df, save_path)
     train_df = merge_and_label_dfs(df_list, 3)
-    model_3 = train(train_df)
+    model_3 = train(train_df, save_path)
     train_df = merge_and_label_dfs(df_list, 4)
-    model_4 = train(train_df)
-
-    # 각 모델에 대한 SHAP과 서로게이트 모델 생성 및 시각화
-    for i, model in enumerate([model_1, model_2, model_3, model_4], start=1):
-        # 데이터 분할
-        train_df = merge_and_label_dfs(df_list, i)
-        X_train, X_test, y_train, y_test = train_test_split(train_df.iloc[:, :-1], train_df.iloc[:, -1], random_state=1        )
-
-        # SHAP 해석
-        shap_values = explain_with_shap(model, X_train, X_test)
-
-        # 서로게이트 모델 훈련 및 시각화
-        #surrogate = train_surrogate_model(model, X_train, y_train)
-
-        #plot_surrogate_model(surrogate, X_train.columns)
+    model_4 = train(train_df, save_path)
 
 
 if __name__ == "__main__":
