@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 import xgboost as xgb
 import lightgbm as lgb
 from sklearn.linear_model import LogisticRegression
+import joblib
 
 # evaluation
 from sklearn.metrics import accuracy_score, f1_score
@@ -161,7 +162,7 @@ def train(df, save_path, model_num):
     logit_model.fit(X_train, y_train)
     
     # save logit model
-    logit_model
+    joblib.dump(logit_model, os.path.join(save_path, 'logit_model.json' + str(model_num)))
 
     # predict and evaluate
     xgb_result = pred_and_eval(xgb_model, X_test, y_test)
@@ -170,7 +171,7 @@ def train(df, save_path, model_num):
 
     # save result
     result_df = pd.DataFrame([xgb_result, lgb_result, logit_result], columns=['accuracy', 'f1 score'], index=['xgb', 'lgb', 'logit'])
-    result_df.to_csv(os.path.join(save_path, 'result.csv'))
+    result_df.to_csv(os.path.join(save_path, 'result' + str(model_num) + '.csv'))
 
     return xgb_model, lgb_model, logit_model
 
