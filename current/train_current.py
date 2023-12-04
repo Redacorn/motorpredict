@@ -168,7 +168,9 @@ def train(df, save_path):
 def main():
 
     # parse arg
-    data_path, save_path = arg_parse()
+    args = arg_parse()
+    data_path = args.data_path
+    save_path = args.save_path
     
     path = data_path
     abs_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
