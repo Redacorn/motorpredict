@@ -83,11 +83,6 @@ def df_preprocess(datapath):
             data['state'] = 4
             df_4 = pd.concat([df_4, data])
 
-        # check if nan exists
-        if data.isnull().values.any():
-            print(file, 'has nan value')
-            data = data.dropna(axis=0)
-
     return df_0, df_1, df_2, df_3, df_4
 
 
@@ -108,6 +103,9 @@ def merge_and_label_dfs(df_list, target_state):
 
     # 모든 데이터프레임을 하나로 합침
     merged_df = pd.concat(processed_dfs)
+
+    # check if there is NaN value
+    merged_df.isnull().sum()
 
     return merged_df
 
@@ -163,7 +161,7 @@ def train(df, save_path, model_num):
         print(df)
     
     # save logit model
-    logit_model.save_model(os.path.join(save_path, 'logit_model.json' + str(model_num)))
+    logit_model
 
     # predict and evaluate
     xgb_result = pred_and_eval(xgb_model, X_test, y_test)
