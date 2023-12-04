@@ -82,6 +82,12 @@ def df_preprocess(datapath):
         elif state(file) == 4:
             data['state'] = 4
             df_4 = pd.concat([df_4, data])
+
+        # check if nan exists
+        if data.isnull().values.any():
+            print(file, 'has nan value')
+            data = data.dropna(axis=0)
+
     return df_0, df_1, df_2, df_3, df_4
 
 
