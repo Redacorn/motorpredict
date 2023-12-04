@@ -125,7 +125,7 @@ def pred_and_eval(model, X_test, y_test):
     return accuracy, f1
 
 
-def train(df, save_path):
+def train(df, save_path, model_num):
     # train 3 models; xgboost, lightgbm, logistic regression
     # split data into X and y
     X = df.iloc[:, :-1]
@@ -143,7 +143,7 @@ def train(df, save_path):
     )
     xgb_model.fit(X_train, y_train)
     # save xgb model
-    xgb_model.save_model(os.path.join(save_path, 'xgb_model.json'))
+    xgb_model.save_model(os.path.join(save_path, 'xgb_model.json' + str(model_num)))
     
     lgb_model = lgb.LGBMClassifier(
         device='gpu',           # Use GPU acceleration
@@ -152,7 +152,7 @@ def train(df, save_path):
     )
     lgb_model.fit(X_train, y_train)
     # save lgb model
-    lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model.json'))
+    lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model.json' + str(model_num)))
 
     logit_model = LogisticRegression()
     # try catch for training. if "ValueError: Input X contains NaN" occurs, print filename
@@ -163,7 +163,7 @@ def train(df, save_path):
         print(df)
     
     # save logit model
-    logit_model.save_model(os.path.join(save_path, 'logit_model.json'))
+    logit_model.save_model(os.path.join(save_path, 'logit_model.json' + str(model_num)))
 
     # predict and evaluate
     xgb_result = pred_and_eval(xgb_model, X_test, y_test)
@@ -194,13 +194,13 @@ def main():
 
     # train model
     train_df = merge_and_label_dfs(df_list, 1)
-    model_1 = train(train_df, save_path)
+    model_1 = train(train_df, save_path, 1)
     train_df = merge_and_label_dfs(df_list, 2)
-    model_2 = train(train_df, save_path)
+    model_2 = train(train_df, save_path, 2)
     train_df = merge_and_label_dfs(df_list, 3)
-    model_3 = train(train_df, save_path)
+    model_3 = train(train_df, save_path, 3)
     train_df = merge_and_label_dfs(df_list, 4)
-    model_4 = train(train_df, save_path)
+    model_4 = train(train_df, save_path, 4)
 
 
 if __name__ == "__main__":
