@@ -155,7 +155,13 @@ def train(df, save_path):
     lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model.json'))
 
     logit_model = LogisticRegression()
-    logit_model.fit(X_train, y_train)
+    # try catch for training. if "ValueError: Input X contains NaN" occurs, print filename
+    try:
+        logit_model.fit(X_train, y_train)
+    except ValueError:
+        print('ValueError: Input X contains NaN')
+        print(df)
+    
     # save logit model
     logit_model.save_model(os.path.join(save_path, 'logit_model.json'))
 
