@@ -131,6 +131,10 @@ def train(df, save_path, model_num):
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1)
 
+    # print head of x_train and y_train
+    print(X_train.head())
+    print(y_train.head())
+
     # train model with GPU
     xgb_model = xgb.XGBClassifier(
         tree_method='gpu_hist',  # Use GPU accelerated algorithm
@@ -153,12 +157,7 @@ def train(df, save_path, model_num):
     lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model.json' + str(model_num)))
 
     logit_model = LogisticRegression()
-    # try catch for training. if "ValueError: Input X contains NaN" occurs, print filename
-    try:
-        logit_model.fit(X_train, y_train)
-    except ValueError:
-        print('ValueError: Input X contains NaN')
-        print(df)
+    logit_model.fit(X_train, y_train)
     
     # save logit model
     logit_model
