@@ -104,8 +104,9 @@ def merge_and_label_dfs(df_list, target_state):
     # 모든 데이터프레임을 하나로 합침
     merged_df = pd.concat(processed_dfs)
 
-    # check if there is NaN value
-    merged_df.isnull().sum()
+    # check if there is NaN of None value
+    # if so, drop row
+    merged_df = merged_df.dropna()
 
     return merged_df
 
