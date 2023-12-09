@@ -148,7 +148,7 @@ def train(df, save_path, model_num):
     )
     xgb_model.fit(X_train, y_train)
     # save xgb model as pkl
-    pickle.dump(xgb_model, open(os.path.join(save_path, 'xgb_model_' +  str(model_num) + 'pkl'), 'wb'))
+    pickle.dump(xgb_model, open(os.path.join(save_path, 'xgb_model_' +  str(model_num) + '.pkl'), 'wb'))
     
     # lgb_model = lgb.LGBMClassifier(
     #     device='gpu',           # Use GPU acceleration
