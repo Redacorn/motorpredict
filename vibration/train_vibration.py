@@ -16,6 +16,7 @@ import xgboost as xgb
 import lightgbm as lgb
 from sklearn.linear_model import LogisticRegression
 import joblib
+import pickle
 
 # evaluation
 from sklearn.metrics import accuracy_score, f1_score
@@ -146,34 +147,37 @@ def train(df, save_path, model_num):
         predictor='gpu_predictor' # 예측에 GPU를 사용
     )
     xgb_model.fit(X_train, y_train)
-    # save xgb model
-    xgb_model.save_model(os.path.join(save_path, 'xgb_model.json' + str(model_num)))
+    # save xgb model as pkl
+    pickle.dump(xgb_model, open(os.path.join(save_path, 'xgb_model_' +  str(model_num) + 'pkl'), 'wb'))
     
-    lgb_model = lgb.LGBMClassifier(
-        device='gpu',           # Use GPU acceleration
-        gpu_platform_id=0,      # platform id
-        gpu_device_id=0         # device id
-    )
-    lgb_model.fit(X_train, y_train)
-    # save lgb model
-    lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model.json' + str(model_num)))
+    # lgb_model = lgb.LGBMClassifier(
+    #     device='gpu',           # Use GPU acceleration
+    #     gpu_platform_id=0,      # platform id
+    #     gpu_device_id=0         # device id
+    # )
+    # lgb_model.fit(X_train, y_train)
+    # # save lgb model
+    # lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model.json' + str(model_num)))
 
-    logit_model = LogisticRegression()
-    logit_model.fit(X_train, y_train)
+    # logit_model = LogisticRegression()
+    # logit_model.fit(X_train, y_train)
     
-    # save logit model
-    joblib.dump(logit_model, os.path.join(save_path, 'logit_model.json' + str(model_num)))
+    # # save logit model
+    # joblib.dump(logit_model, os.path.join(save_path, 'logit_model.json' + str(model_num)))
 
     # predict and evaluate
     xgb_result = pred_and_eval(xgb_model, X_test, y_test)
-    lgb_result = pred_and_eval(lgb_model, X_test, y_test)
-    logit_result = pred_and_eval(logit_model, X_test, y_test)
+    # lgb_result = pred_and_eval(lgb_model, X_test, y_test)
+    # logit_result = pred_and_eval(logit_model, X_test, y_test)
 
     # save result
-    result_df = pd.DataFrame([xgb_result, lgb_result, logit_result], columns=['accuracy', 'f1 score'], index=['xgb', 'lgb', 'logit'])
+    # result_df = pd.DataFrame([xgb_result, lgb_result, logit_result], columns=['accuracy', 'f1 score'], index=['xgb', 'lgb', 'logit'])
+    # result_df.to_csv(os.path.join(save_path, 'result' + str(model_num) + '.csv'))
+
+    result_df = pd.DataFrame([xgb_result], columns=['accuracy', 'f1 score'], index=['xgb', 'lgb', 'logit'])
     result_df.to_csv(os.path.join(save_path, 'result' + str(model_num) + '.csv'))
 
-    return xgb_model, lgb_model, logit_model
+    return xgb_model
 
 
 def main():
