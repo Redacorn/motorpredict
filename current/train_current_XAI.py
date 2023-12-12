@@ -27,9 +27,7 @@ from tqdm import tqdm
 
 def arg_parse():
     # params : data_path, save_path
-    parser = argparse.ArgumentParser(description='usage: python train_current.py --data_path <data_path> --save_path <save_path>')
-    # parser.add_argument('--data_path', type=str, default='/home/gpuadmin/test_data/transformed/current', help='data path')
-    parser.add_argument('--data_path', type=str, default='../transformed/current', help='data path')
+    parser.add_argument('--data_path', type=str, default='/home/gpuadmin/motorpredict/model/current_data', help='data path')
     parser.add_argument('--save_path', type=str, default='../model', help='model save path')
 
     # if no ../model folder, make folder
@@ -65,33 +63,35 @@ def train(df, save_path, model_num):
     # split data into X and y
     X = df.iloc[:, 1:-1]
     y = df.iloc[:, -1]
+    from sklearn.preprocessing import LabelEncoder
+    encoder = LabelEncoder()
+    y = encoder.fit_transform(y)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1, test_size=0.2, train_size=0.8)
 
     # print head of x_train and y_train
-    print(X_train.head())
-    print(y_train.head())
+    # print(X_train.head())
+    # print(y_train.head())
 
-    # train model with GPU
-    # xgb_model = xgb.XGBClassifier(
-    #     tree_method='gpu_hist',  # Use GPU accelerated algorithm
-    #     # 다음 매개변수는 필요에 따라 조정할 수 있음
-    #     gpu_id=0,               # GPU ID, 멀티 GPU 시스템에서 선택적 사용
-    #     n_gpus=-1,              # 모든 GPU를 사용
-    #     predictor='gpu_predictor' # 예측에 GPU를 사용
-    # )
-    # gpu 사용 안할 경우
-    xgb_model = xgb.XGBClassifier()
-    xgb_model.fit(X_train, y_train)
+    train model with GPU
+    xgb_model = xgb.XGBClassifier(
+        tree_method='gpu_hist',  # Use GPU accelerated algorithm
+        # 다음 매개변수는 필요에 따라 조정할 수 있음
+        gpu_id=0,               # GPU ID, 멀티 GPU 시스템에서 선택적 사용
+        n_gpus=-1,              # 모든 GPU를 사용
+        predictor='gpu_predictor' # 예측에 GPU를 사용
+    )
+  
+  
+  
     # save xgb model as pkl
     # pickle.dump(xgb_model, open(os.path.join(save_path, 'xgb_model' +  str(model_num) + '.pkl'), 'wb'))
     
-    # lgb_model = lgb.LGBMClassifier(
-    #     device='gpu',           # Use GPU acceleration
-    #     gpu_platform_id=0,      # platform id
-    #     gpu_device_id=0         # device id
-    # )
-    lgb_model = lgb.LGBMClassifier()
+    lgb_model = lgb.LGBMClassifier(
+        device='gpu',           # Use GPU acceleration
+        gpu_platform_id=0,      # platform id
+        gpu_device_id=0         # device id
+    )
     lgb_model.fit(X_train, y_train)
     # save lgb model
     # lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model' + str(model_num) + '.json'))
@@ -110,13 +110,15 @@ def train(df, save_path, model_num):
     logit_result = pred_and_eval(logit_model, X_test, y_test)
 
     # shap value
-    shap_values = shap_analysis(xgb_model, X, y)
-    shap_values = shap_analysis(lgb_model, X, y)
+    shap_values = shap_analysis(xgb_model, X, y, 'xgb {}'.format(model_num))
+    shap_values = shap_analysis(lgb_model, X, y, 'lgb {}'.format(model_num))
 
     # coef value plot
     print(logit_model.coef_)
     plt.plot(logit_model.coef_)
-    plt.show()
+    plt.title('coef value {}'.format(model_num))
+    plt.savefig('./model/coef value {}.jpg'.format(model_num))
+  
 
     # save result
     result_df = pd.DataFrame([xgb_result, lgb_result, logit_result], columns=['accuracy', 'f1 score'], index=['xgb', 'lgb', 'logit'])
@@ -125,16 +127,17 @@ def train(df, save_path, model_num):
     return xgb_model, lgb_model, logit_model
 
 # shap 분석
-def shap_analysis(model, X, y):
+def shap_analysis(model, X, y, model_name):
     # SHAP Explainer 생성
     explainer = shap.Explainer(model, X)
   
     # SHAP 값 계산
     shap_values = explainer(X)
 
-    # 시각화: SHAP 요약 플롯
+    # 시각화: SHAP 요약 플롯 및 jpg 저장
     shap.summary_plot(shap_values, X, plot_type="bar")
-    plt.show()
+    plt.title('shap summary plot({})'.format(model_name))
+    plt.savefig('./model/shap_summary_plot({}).jpg'.format(model_name))
 
     return shap_values
 
@@ -156,7 +159,7 @@ def main():
 
     for i in tqdm(range(5)):
         df = pd.read_csv(f'./model/current_data/train_df_{i}.csv')
-        df_list.append(df)
+        df_list.append(df.iloc[:, :])
         # x_list.append(df.drop(['state'], axis=1).drop(['Unnamed: 0'], axis=1))
         # y_list.append(df['state'])
 
