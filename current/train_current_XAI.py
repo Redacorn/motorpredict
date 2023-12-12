@@ -148,12 +148,6 @@ def shap_analysis(model, X, y, model_name, result_path):
 
     return shap_values
 
-
-def worker(args):
-    df, save_path, index, result_path = args
-    return train(df, save_path, index, result_path)
-
-
 def main():
 
     # parse arg
@@ -171,13 +165,12 @@ def main():
         # x_list.append(df.drop(['state'], axis=1).drop(['Unnamed: 0'], axis=1))
         # y_list.append(df['state'])
 
-    tasks = [(df_list[i], save_path, i, result_path) for i in range(5)]
-
     # train model
-    with multiprocessing.Pool() as pool:
-        models = pool.map(worker, tasks)
-
-    model_0, model_1, model_2, model_3, model_4 = models
+    model_0 = train(df_list[0], save_path, 0, result_path)
+    model_1 = train(df_list[1], save_path, 1, result_path)
+    model_2 = train(df_list[2], save_path, 2, result_path)
+    model_3 = train(df_list[3], save_path, 3, result_path)
+    model_4 = train(df_list[4], save_path, 4, result_path)
 
 
 if __name__ == "__main__":
