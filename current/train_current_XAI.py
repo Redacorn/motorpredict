@@ -111,8 +111,6 @@ def train(df, save_path, model_num, result_path):
     lgb_result = pred_and_eval(lgb_model, X_test, y_test)
     logit_result = pred_and_eval(logit_model, X_test, y_test)
 
-    num_processes = multiprocessing.cpu_count()
-
     # shap value
     num_processes = multiprocessing.cpu_count()
 
@@ -146,13 +144,15 @@ def worker(input_data):
 
 
 def parallel_shap_analysis(models, X_values, y_values, model_names, result_paths, num_processes):
-    print('parallel shap analysis')
     with multiprocessing.Pool(num_processes) as pool:
         # 각 작업에 대한 입력을 별도의 리스트로 관리합니다.
         input_data = zip(models, X_values, y_values, model_names, result_paths)
         
-        # 각 프로세스에서 worker 함수를 실행합니다.
-        results = pool.map(worker, input_data)
+        # 각 프로세스에서 worker 함수를 실행하고, 결과를 즉시 출력합니다.
+        results = []
+        for result in pool.imap(worker, input_data):
+            print("Completed one task")
+            results.append(result)
 
     # 결과를 반환합니다.
     return results
