@@ -140,8 +140,7 @@ def parallel_shap_analysis(input_data, num_processes):
     split_input_data = np.array_split(input_data, num_processes)
 
     with multiprocessing.Pool(num_processes) as pool:
-        # 각 프로세스에서 worker 함수를 실행합니다.
-        results = pool.map(worker, split_input_data)
+        results = pool.imap(worker, split_input_data)
 
     # 결과를 반환합니다.
     return results
