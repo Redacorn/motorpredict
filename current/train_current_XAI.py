@@ -88,8 +88,6 @@ def train(df, save_path, model_num, result_path):
     )
     xgb_model.fit(X_train, y_train)
   
-  
-  
     # save xgb model as pkl
     # pickle.dump(xgb_model, open(os.path.join(save_path, 'xgb_model' +  str(model_num) + '.pkl'), 'wb'))
     
@@ -102,10 +100,8 @@ def train(df, save_path, model_num, result_path):
     # save lgb model
     # lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model' + str(model_num) + '.json'))
 
-    
     logit_model = LogisticRegression(max_iter=1000)
     logit_model.fit(X_train, y_train)
-
     
     # save logit model
     # joblib.dump(logit_model, os.path.join(save_path, 'logit_model'  + str(model_num) + '.json'))
@@ -148,6 +144,12 @@ def shap_analysis(model, X, y, model_name, result_path):
 
     return shap_values
 
+
+def worker(args):
+    df, save_path, index, result_path = args
+    return train(df, save_path, index, result_path)
+
+
 def main():
 
     # parse arg
@@ -165,12 +167,13 @@ def main():
         # x_list.append(df.drop(['state'], axis=1).drop(['Unnamed: 0'], axis=1))
         # y_list.append(df['state'])
 
+    tasks = [(df_list[i], save_path, i, result_path) for i in range(5)]
+
     # train model
-    model_0 = train(df_list[0], save_path, 0, result_path)
-    model_1 = train(df_list[1], save_path, 1, result_path)
-    model_2 = train(df_list[2], save_path, 2, result_path)
-    model_3 = train(df_list[3], save_path, 3, result_path)
-    model_4 = train(df_list[4], save_path, 4, result_path)
+    with multiprocessing.Pool() as pool:
+        models = pool.map(worker, tasks)
+
+    model_0, model_1, model_2, model_3, model_4 = models
 
 
 if __name__ == "__main__":
