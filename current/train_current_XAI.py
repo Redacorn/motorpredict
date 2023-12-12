@@ -27,13 +27,17 @@ from tqdm import tqdm
 
 def arg_parse():
     # params : data_path, save_path
-    parser = argparse.ArgumentParser(description='usage: python train_current.py --data_path <data_path> --save_path <save_path>')
-    parser.add_argument('--data_path', type=str, default='/home/gpuadmin/motorpredict/model/current_data', help='data path')
+    parser = argparse.ArgumentParser(description='usage: python train_current_xai.py --data_path <data_path> --save_path <save_path>')
+    parser.add_argument('--data_path', type=str, default='/home/gpuadmin/motorpredict/data', help='data path')
     parser.add_argument('--save_path', type=str, default='../model', help='model save path')
+    parser.add_argument('--result_path', type=int, default='../result', help='result save path')
 
     # if no ../model folder, make folder
     if not os.path.exists('../model'):
         os.makedirs('../model')
+
+    if not os.path.exists('../result'):
+        os.makedirs('../result')
     
     args = parser.parse_args()
     return args
@@ -59,7 +63,7 @@ def pred_and_eval(model, X_test, y_test):
     return accuracy, f1
 
 
-def train(df, save_path, model_num):
+def train(df, save_path, model_num, result_path):
     # train 3 models; xgboost, lightgbm, logistic regression
     # split data into X and y
     X = df.iloc[:, :-1]
@@ -112,16 +116,15 @@ def train(df, save_path, model_num):
     logit_result = pred_and_eval(logit_model, X_test, y_test)
 
     # shap value
-    shap_values = shap_analysis(xgb_model, X, y, 'xgb {}'.format(model_num))
-    shap_values = shap_analysis(lgb_model, X, y, 'lgb {}'.format(model_num))
+    shap_values = shap_analysis(xgb_model, X, y, 'xgb {}'.format(model_num), result_path)
+    shap_values = shap_analysis(lgb_model, X, y, 'lgb {}'.format(model_num), result_path)
 
     # coef value plot
     print(logit_model.coef_)
     plt.plot(logit_model.coef_)
     plt.title('coef value {}'.format(model_num))
-    plt.savefig('./model/coef value {}.jpg'.format(model_num))
+    plt.savefig(result_path + '/coef value {}.jpg'.format(model_num))
   
-
     # save result
     result_df = pd.DataFrame([xgb_result, lgb_result, logit_result], columns=['accuracy', 'f1 score'], index=['xgb', 'lgb', 'logit'])
     result_df.to_csv(os.path.join(save_path, 'result' + str(model_num) + '.csv'))
@@ -129,7 +132,7 @@ def train(df, save_path, model_num):
     return xgb_model, lgb_model, logit_model
 
 # shap 분석
-def shap_analysis(model, X, y, model_name):
+def shap_analysis(model, X, y, model_name, result_path):
     # SHAP Explainer 생성
     explainer = shap.Explainer(model, X)
   
@@ -139,7 +142,7 @@ def shap_analysis(model, X, y, model_name):
     # 시각화: SHAP 요약 플롯 및 jpg 저장
     shap.summary_plot(shap_values, X, plot_type="bar")
     plt.title('shap summary plot({})'.format(model_name))
-    plt.savefig('./model/shap_summary_plot({}).jpg'.format(model_name))
+    plt.savefig(result_path + '/shap_summary_plot({}).jpg'.format(model_name))
 
     return shap_values
 
@@ -149,28 +152,23 @@ def main():
     args = arg_parse()
     data_path = args.data_path
     save_path = args.save_path
-
-    path = data_path
-    abs_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), path)
-    folder_path = abs_path
-
-    datapath = glob.glob(os.path.join(folder_path, '*'))
+    result_path = args.result_path
 
     # train_df 불러오기
     df_list, x_list, y_list = [], [], []
 
     for i in tqdm(range(5)):
-        df = pd.read_csv(f'./model/current_data/train_df_{i}.csv')
+        df = pd.read_csv(data_path + '/train_df_{}.csv'.format(i))
         df_list.append(df.iloc[:, 1:])
         # x_list.append(df.drop(['state'], axis=1).drop(['Unnamed: 0'], axis=1))
         # y_list.append(df['state'])
 
     # train model
-    model_0 = train(df_list[0], save_path, 0)
-    model_1 = train(df_list[1], save_path, 1)
-    model_2 = train(df_list[2], save_path, 2)
-    model_3 = train(df_list[3], save_path, 3)
-    model_4 = train(df_list[4], save_path, 4)
+    model_0 = train(df_list[0], save_path, 0, result_path)
+    model_1 = train(df_list[1], save_path, 1, result_path)
+    model_2 = train(df_list[2], save_path, 2, result_path)
+    model_3 = train(df_list[3], save_path, 3, result_path)
+    model_4 = train(df_list[4], save_path, 4, result_path)
 
 
 if __name__ == "__main__":
