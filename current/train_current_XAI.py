@@ -1,8 +1,10 @@
 # global
 import os
-import re
 import glob
 import argparse
+
+# multiprocessing
+import multiprocessing
 
 # data processing
 import numpy as np
@@ -15,8 +17,6 @@ from sklearn.model_selection import train_test_split
 import xgboost as xgb
 import lightgbm as lgb
 from sklearn.linear_model import LogisticRegression
-import joblib
-import pickle
 
 # evaluation
 from sklearn.metrics import accuracy_score, f1_score
@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import shap
 
 from tqdm import tqdm
+
 
 def arg_parse():
     # params : data_path, save_path
@@ -88,8 +89,6 @@ def train(df, save_path, model_num, result_path):
     )
     xgb_model.fit(X_train, y_train)
   
-  
-  
     # save xgb model as pkl
     # pickle.dump(xgb_model, open(os.path.join(save_path, 'xgb_model' +  str(model_num) + '.pkl'), 'wb'))
     
@@ -102,11 +101,9 @@ def train(df, save_path, model_num, result_path):
     # save lgb model
     # lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model' + str(model_num) + '.json'))
 
-    
     logit_model = LogisticRegression(max_iter=1000)
     logit_model.fit(X_train, y_train)
 
-    
     # save logit model
     # joblib.dump(logit_model, os.path.join(save_path, 'logit_model'  + str(model_num) + '.json'))
 
@@ -116,8 +113,9 @@ def train(df, save_path, model_num, result_path):
     logit_result = pred_and_eval(logit_model, X_test, y_test)
 
     # shap value
-    shap_values = shap_analysis(xgb_model, X, y, 'xgb {}'.format(model_num), result_path)
-    shap_values = shap_analysis(lgb_model, X, y, 'lgb {}'.format(model_num), result_path)
+    num_processes = multiprocessing.cpu_count()
+    shap_values = parallel_shap_analysis((xgb_model, X, y, 'xgb {}'.format(model_num), result_path), num_processes=num_processes)
+    shap_values = parallel_shap_analysis((lgb_model, X, y, 'lgb {}'.format(model_num), result_path), num_processes=num_processes)
 
     # coef value plot
     print(logit_model.coef_)
@@ -130,6 +128,24 @@ def train(df, save_path, model_num, result_path):
     result_df.to_csv(os.path.join(save_path, 'result' + str(model_num) + '.csv'))
 
     return xgb_model, lgb_model, logit_model
+
+
+def worker(input_data):
+    model, X, y, model_name, result_path = input_data
+    return shap_analysis(model, X, y, model_name, result_path)
+
+
+def parallel_shap_analysis(input_data, num_processes):
+    # 입력 데이터를 프로세스 수에 따라 분할합니다.
+    split_input_data = np.array_split(input_data, num_processes)
+
+    with multiprocessing.Pool(num_processes) as pool:
+        # 각 프로세스에서 worker 함수를 실행합니다.
+        results = pool.map(worker, split_input_data)
+
+    # 결과를 반환합니다.
+    return results
+
 
 # shap 분석
 def shap_analysis(model, X, y, model_name, result_path):
@@ -147,6 +163,7 @@ def shap_analysis(model, X, y, model_name, result_path):
     plt.savefig(result_path + '/shap_summary_plot({}).jpg'.format(model_name))
 
     return shap_values
+
 
 def main():
 
