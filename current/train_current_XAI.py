@@ -134,6 +134,8 @@ def train(df, save_path, model_num, result_path):
 # shap 분석
 def shap_analysis(model, X, y, model_name, result_path):
     # SHAP Explainer 생성
+
+    print('shap analysis of' + model_name)
     explainer = shap.Explainer(model, X)
   
     # SHAP 값 계산
