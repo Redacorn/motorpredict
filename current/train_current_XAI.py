@@ -1,5 +1,6 @@
 # global
 import os
+import sys
 import glob
 import argparse
 
@@ -136,6 +137,10 @@ def train(df, save_path, model_num, result_path):
     return xgb_model, lgb_model, logit_model
 
 
+def worker_init():
+    sys.stdout = open(os.devnull, 'w')
+
+
 def worker(input_data):
     # shap_analysis 함수를 호출하고 결과를 반환합니다.
     print('worker')
@@ -144,7 +149,9 @@ def worker(input_data):
 
 
 def parallel_shap_analysis(models, X_values, y_values, model_names, result_paths, num_processes):
-    with multiprocessing.Pool(num_processes) as pool:
+    print('parallel shap analysis')
+    # 각 프로세스에서 worker_init 함수를 실행합니다.
+    with multiprocessing.Pool(num_processes, initializer=worker_init) as pool:
         # 각 작업에 대한 입력을 별도의 리스트로 관리합니다.
         input_data = zip(models, X_values, y_values, model_names, result_paths)
         
