@@ -124,7 +124,7 @@ def train(df, save_path, model_num, result_path):
     result_paths = [result_path, result_path]
 
     shap_values = parallel_shap_analysis(models, X_values, y_values, model_names, result_paths, num_processes=num_processes)
-    
+
     # coef value plot
     print(logit_model.coef_)
     plt.plot(logit_model.coef_)
@@ -140,11 +140,13 @@ def train(df, save_path, model_num, result_path):
 
 def worker(input_data):
     # shap_analysis 함수를 호출하고 결과를 반환합니다.
+    print('worker')
     model, X, y, model_name, result_path = input_data
     return shap_analysis(model, X, y, model_name, result_path)
 
 
 def parallel_shap_analysis(models, X_values, y_values, model_names, result_paths, num_processes):
+    print('parallel shap analysis')
     with multiprocessing.Pool(num_processes) as pool:
         # 각 작업에 대한 입력을 별도의 리스트로 관리합니다.
         input_data = zip(models, X_values, y_values, model_names, result_paths)
