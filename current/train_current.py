@@ -157,7 +157,7 @@ def train(df, save_path, model_num):
     )
     lgb_model.fit(X_train, y_train)
     # save lgb model
-    lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model' + str(model_num) + '.json' + ))
+    lgb_model.booster_.save_model(os.path.join(save_path, 'lgb_model' + str(model_num) + '.json'))
 
     logit_model = LogisticRegression()
     logit_model.fit(X_train, y_train)
