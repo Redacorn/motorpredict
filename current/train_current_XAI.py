@@ -25,7 +25,6 @@ import shap
 
 from tqdm import tqdm
 
-
 def arg_parse():
     # params : data_path, save_path
     parser = argparse.ArgumentParser(description='usage: python train_current_xai.py --data_path <data_path> --save_path <save_path>')
@@ -112,8 +111,9 @@ def train(df, save_path, model_num, result_path):
     lgb_result = pred_and_eval(lgb_model, X_test, y_test)
     logit_result = pred_and_eval(logit_model, X_test, y_test)
 
-    # shap value
     num_processes = multiprocessing.cpu_count()
+
+    # shap value
     shap_values = parallel_shap_analysis((xgb_model, X, y, 'xgb {}'.format(model_num), result_path), num_processes=num_processes)
     shap_values = parallel_shap_analysis((lgb_model, X, y, 'lgb {}'.format(model_num), result_path), num_processes=num_processes)
 
@@ -131,6 +131,7 @@ def train(df, save_path, model_num, result_path):
 
 
 def worker(input_data):
+    # shap_analysis 함수를 호출하고 결과를 반환합니다.
     model, X, y, model_name, result_path = input_data
     return shap_analysis(model, X, y, model_name, result_path)
 
@@ -140,7 +141,8 @@ def parallel_shap_analysis(input_data, num_processes):
     split_input_data = np.array_split(input_data, num_processes)
 
     with multiprocessing.Pool(num_processes) as pool:
-        results = pool.imap(worker, split_input_data)
+        # 각 프로세스에서 worker 함수를 실행합니다.
+        results = pool.map(worker, split_input_data)
 
     # 결과를 반환합니다.
     return results
