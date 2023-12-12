@@ -114,9 +114,17 @@ def train(df, save_path, model_num, result_path):
     num_processes = multiprocessing.cpu_count()
 
     # shap value
-    shap_values = parallel_shap_analysis((xgb_model, X, y, 'xgb {}'.format(model_num), result_path), num_processes=num_processes)
-    shap_values = parallel_shap_analysis((lgb_model, X, y, 'lgb {}'.format(model_num), result_path), num_processes=num_processes)
+    num_processes = multiprocessing.cpu_count()
 
+    # shap value
+    models = [xgb_model, lgb_model]
+    X_values = [X, X]
+    y_values = [y, y]
+    model_names = ['xgb {}'.format(model_num), 'lgb {}'.format(model_num)]
+    result_paths = [result_path, result_path]
+
+    shap_values = parallel_shap_analysis(models, X_values, y_values, model_names, result_paths, num_processes=num_processes)
+    
     # coef value plot
     print(logit_model.coef_)
     plt.plot(logit_model.coef_)
@@ -136,16 +144,13 @@ def worker(input_data):
     return shap_analysis(model, X, y, model_name, result_path)
 
 
-def parallel_shap_analysis(input_data, num_processes):
-    # 입력 데이터를 균일한 형태의 배열로 변환합니다.
-    input_data = np.array([list(x) for x in input_data])
-
-    # 입력 데이터를 프로세스 수에 따라 분할합니다.
-    split_input_data = np.array_split(input_data, num_processes)
-
+def parallel_shap_analysis(models, X_values, y_values, model_names, result_paths, num_processes):
     with multiprocessing.Pool(num_processes) as pool:
+        # 각 작업에 대한 입력을 별도의 리스트로 관리합니다.
+        input_data = zip(models, X_values, y_values, model_names, result_paths)
+        
         # 각 프로세스에서 worker 함수를 실행합니다.
-        results = pool.map(worker, split_input_data)
+        results = pool.map(worker, input_data)
 
     # 결과를 반환합니다.
     return results
