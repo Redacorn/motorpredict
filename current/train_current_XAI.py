@@ -137,6 +137,9 @@ def worker(input_data):
 
 
 def parallel_shap_analysis(input_data, num_processes):
+    # 입력 데이터를 균일한 형태의 배열로 변환합니다.
+    input_data = np.array([list(x) for x in input_data])
+
     # 입력 데이터를 프로세스 수에 따라 분할합니다.
     split_input_data = np.array_split(input_data, num_processes)
 
