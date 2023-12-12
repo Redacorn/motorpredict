@@ -27,6 +27,7 @@ from tqdm import tqdm
 
 def arg_parse():
     # params : data_path, save_path
+    parser = argparse.ArgumentParser(description='usage: python train_current.py --data_path <data_path> --save_path <save_path>')
     parser.add_argument('--data_path', type=str, default='/home/gpuadmin/motorpredict/model/current_data', help='data path')
     parser.add_argument('--save_path', type=str, default='../model', help='model save path')
 
@@ -61,7 +62,7 @@ def pred_and_eval(model, X_test, y_test):
 def train(df, save_path, model_num):
     # train 3 models; xgboost, lightgbm, logistic regression
     # split data into X and y
-    X = df.iloc[:, 1:-1]
+    X = df.iloc[:, :-1]
     y = df.iloc[:, -1]
     from sklearn.preprocessing import LabelEncoder
     encoder = LabelEncoder()
@@ -73,7 +74,7 @@ def train(df, save_path, model_num):
     # print(X_train.head())
     # print(y_train.head())
 
-    train model with GPU
+    # train model with GPU
     xgb_model = xgb.XGBClassifier(
         tree_method='gpu_hist',  # Use GPU accelerated algorithm
         # 다음 매개변수는 필요에 따라 조정할 수 있음
@@ -81,6 +82,7 @@ def train(df, save_path, model_num):
         n_gpus=-1,              # 모든 GPU를 사용
         predictor='gpu_predictor' # 예측에 GPU를 사용
     )
+    xgb_model.fit(X_train, y_train)
   
   
   
@@ -159,7 +161,7 @@ def main():
 
     for i in tqdm(range(5)):
         df = pd.read_csv(f'./model/current_data/train_df_{i}.csv')
-        df_list.append(df.iloc[:, :])
+        df_list.append(df.iloc[:, 1:])
         # x_list.append(df.drop(['state'], axis=1).drop(['Unnamed: 0'], axis=1))
         # y_list.append(df['state'])
 
