@@ -30,7 +30,7 @@ def arg_parse():
     parser = argparse.ArgumentParser(description='usage: python train_current_xai.py --data_path <data_path> --save_path <save_path>')
     parser.add_argument('--data_path', type=str, default='/home/gpuadmin/motorpredict/data', help='data path')
     parser.add_argument('--save_path', type=str, default='../model', help='model save path')
-    parser.add_argument('--result_path', type=int, default='../result', help='result save path')
+    parser.add_argument('--result_path', type=str, default='../result', help='result save path')
 
     # if no ../model folder, make folder
     if not os.path.exists('../model'):
