@@ -116,7 +116,6 @@ def train(df, save_path, model_num):
     # coef value plot
     print(logit_model.coef_)
     plt.plot(logit_model.coef_)
-    plt.title(f"Logistic Regression Coef Plot for {model_name}")
     plt.show()
 
     # save result
@@ -135,7 +134,6 @@ def shap_analysis(model, X, y):
 
     # 시각화: SHAP 요약 플롯
     shap.summary_plot(shap_values, X, plot_type="bar")
-    plt.title(f"SHAP Summary Plot for {model_name}")
     plt.show()
 
     return shap_values
