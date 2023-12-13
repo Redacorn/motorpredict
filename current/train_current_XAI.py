@@ -162,7 +162,7 @@ def main():
     df_list, x_list, y_list = [], [], []
 
     for i in tqdm(range(5)):
-        df = pd.read_csv(data_path + '/train_df_{i}.csv')
+        df = pd.read_csv(data_path + f'/train_df_{i}.csv')
         df_list.append(df.iloc[:, 1:])
         # x_list.append(df.drop(['state'], axis=1).drop(['Unnamed: 0'], axis=1))
         # y_list.append(df['state'])
