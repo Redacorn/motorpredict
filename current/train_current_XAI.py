@@ -168,11 +168,11 @@ def main():
         # y_list.append(df['state'])
 
     # train model
-    model_0 = train(df_list[0], save_path, 0)
-    model_1 = train(df_list[1], save_path, 1)
-    model_2 = train(df_list[2], save_path, 2)
-    model_3 = train(df_list[3], save_path, 3)
-    model_4 = train(df_list[4], save_path, 4)
+    model_0 = train(df_list[0], save_path, 0, result_path)
+    model_1 = train(df_list[1], save_path, 1, result_path)
+    model_2 = train(df_list[2], save_path, 2, result_path)
+    model_3 = train(df_list[3], save_path, 3, result_path)
+    model_4 = train(df_list[4], save_path, 4, result_path)
 
 
 if __name__ == "__main__":
